@@ -1,19 +1,24 @@
-# ECS Remote Driver Demo
-The ECS remote driver demo shows how Nomad can be used to run, monitor and maintain tasks running on an AWS ECS cluster.
+# Nomad Demo
 
-## ECS Driver Main Responsibilities
-The remote driver is built in the same way, using the same interfaces as another other Nomad task driver. Its behaviour can differ slightly, depending on the remote endpoint. Therefore below is a short overview on the main task which the ECS driver must perform:
- * Driver Health: driver health is performed by performing a describe call on the ECS cluster
- * Driver Run: the main run function of the driver is responsible polling the ECS task, describing its health. If the task is in a terminal state, the driver exist its current loop and passes this information back to Nomad.
+## Tested Env
 
-## Requirements
-In order to run this demo, you will need the following items available.
+> Terraform > 0.12.0
+> Nomad >= 1.1.0
+> aws-iam-authenticator >= 0.5.0
+> docker
+> java
 
- * An AWS account and API access credentials (specific policy requirements TBC)
- * Terraform > 0.12.0 - https://www.terraform.io/downloads.html
- * [Nomad v1.1.0-beta1 or later](https://releases.hashicorp.com/nomad/)
+## Architecture
+
+> Diagram : <./diagram>
+
+![architecture](./diagram/nomad_demo.png)
+
+- Nomad : External Nomad Server
+- EC2 : Nomad Client
 
 ## Assumptions / Rough Edges
+
 The demo makes some assumptions because of the quick, and local nature of it.
  * AWS access credentials will be available via environment variables or default profile. This is needed by Terraform and Nomad. Please see the [AWS documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) for more details on setting this up.
  * The ECS cluster is running within `us-east-1`. If you need to change the AWS region please update `./nomad/{client-1,client-2,server}.hcl` files.
@@ -25,20 +30,20 @@ When running this demo, a small number of AWS resources will be created. The maj
     ```
     $ cd ./terraform
     ```
+
 1. Modify the Terraform variables file with any custom configuration. The file is located at `./terraform/variables.tf`.
+
 1. Perform the Terraform initialisation:
     ```
     $ terraform init
     ```
-1. Inspect the Terraform plan output and verify it is as expected:
-    ```
-    $ terraform plan -out=nomad-task-driver-demo
-    ```
+
 1. Apply the Terraform plan to build out the AWS resources:
     ```
-    $ terraform apply -auto-approve nomad-task-driver-demo
+    $ terraform apply -auto-approve
     ```
 1. The Terraform output will contain `demo_subnet_id` and `demo_security_group_id` values, these should be noted for later use.
+
 1. Start the Nomad server and clients. Ideally each command is run in a separate terminal allowing for easy following of logs:
     ```
     $ cd ../nomad
@@ -102,10 +107,11 @@ The following steps will demonstrate how Nomad, and the remote driver handle mul
     ```
 
 ## Tear Down
+
 1. Stop the Nomad clients and server processes, either by control-c or killing the process IDs.
+
 1. Destroy the created AWS resources, performing a plan and checking the destroy is targeting the expected resources:
     ```
     $ cd ../terraform
-    $ terraform plan -destroy
     $ terraform destroy -auto-approve
     ```
