@@ -76,6 +76,7 @@ EOF
       service {
         name = "legacy-tomcat"
         tags = ["tomcat"]
+        provider = "nomad"
 
         port = "http"
 
