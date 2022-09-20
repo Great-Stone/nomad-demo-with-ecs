@@ -1,7 +1,7 @@
 variables {
-  // tomcat_download_url = "https://archive.apache.org/dist/tomcat/tomcat-10/v10.0.10/bin/apache-tomcat-10.0.10.tar.gz"
+  tomcat_download_url = "https://archive.apache.org/dist/tomcat/tomcat-10/v10.0.10/bin/apache-tomcat-10.0.10.tar.gz"
   // https://tomcat.apache.org/tomcat-10.0-doc/appdev/sample/
-  // war_download_url = "https://tomcat.apache.org/tomcat-10.0-doc/appdev/sample/sample.war"
+  war_download_url = "https://tomcat.apache.org/tomcat-10.0-doc/appdev/sample/sample.war"
 }
 
 job "tomcat-10" {
@@ -10,7 +10,7 @@ job "tomcat-10" {
   type = "service"
 
   group "tomcat" {
-    count = 3
+    count = 1
 
     scaling {
       enabled = true
@@ -24,6 +24,7 @@ job "tomcat-10" {
         network {
           port "http" {}
           port "stop" {}
+          port "jmx" {}
         }
         cpu = 500
         memory = 512
@@ -31,7 +32,7 @@ job "tomcat-10" {
       env {
         APP_VERSION = "0.1"
         CATALINA_HOME = "${NOMAD_TASK_DIR}/apache-tomcat-10.0.10"
-        CATALINA_OPTS = "-Dport.http=$NOMAD_PORT_http -Dport.stop=$NOMAD_PORT_stop -Ddefault.context=$NOMAD_TASK_DIR -Xms256m -Xmx512m"
+        CATALINA_OPTS = "-Dport.http=$NOMAD_PORT_http -Dport.stop=$NOMAD_PORT_stop -Ddefault.context=$NOMAD_TASK_DIR -Xms256m -Xmx512m -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$NOMAD_PORT_jmx -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
         JAVA_HOME = "/usr/lib/jvm/java-11-openjdk-amd64"
       }
       template {
@@ -62,11 +63,11 @@ EOF
         destination = "local/conf/server.xml"
       }
       artifact {
-        source = "{{ key \"backend/info/tomcat\" }}"
+        source = var.tomcat_download_url
         destination = "/local"
       }
       artifact {
-        source = "{{ key \"backend/info/war\" }}"
+        source = var.war_download_url
         destination = "/local/webapps"
       }
       config {
@@ -79,13 +80,6 @@ EOF
         provider = "nomad"
 
         port = "http"
-
-        check {
-          type  = "tcp"
-          interval = "10s"
-          timeout  = "2s"
-          port  = "http"
-        }
       }
     }
   }

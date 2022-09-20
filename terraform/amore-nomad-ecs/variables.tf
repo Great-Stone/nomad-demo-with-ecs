@@ -1,7 +1,6 @@
-variable "vpc_cidr_block" {
-  description = "The CIDR block range to use when creating the VPC."
-  type        = string
-  default     = "10.0.0.0/24"
+variable "default_tags" {
+  type = map(any)
+  default = {}
 }
 
 variable "ecs_task_definition_file" {

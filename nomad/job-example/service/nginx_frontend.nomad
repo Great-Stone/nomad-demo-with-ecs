@@ -13,6 +13,7 @@ job "nginx-frontend" {
     service {
       name = "nginx-frontend"
       port = "http"
+      provider = "nomad"
     }
 
     task "nginx" {
@@ -29,7 +30,7 @@ job "nginx-frontend" {
       template {
         data = <<EOF
 upstream backend {
-{{ range service "nginx-backend" }}
+{{ range nomadService "nginx-backend" }}
   server {{ .Address }}:{{ .Port }}; # Tomcat
 {{ else }}server 127.0.0.1:65535; # force a 502
 {{ end }}

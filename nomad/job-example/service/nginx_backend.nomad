@@ -6,7 +6,7 @@ job "nginx_backend" {
   }
 
   group "nginx-prod" {
-    count = 3
+    count = 1
 
     scaling {
       enabled = true
@@ -24,6 +24,7 @@ job "nginx_backend" {
     service {
       name = "nginx-backend"
       port = "http"
+      provider = "nomad"
       tags = ["prod"]
     }
 
@@ -73,6 +74,7 @@ job "nginx_backend" {
       name = "nginx-backend"
       port = "http"
       tags = ["stage"]
+      provider = "nomad"
     }
 
     task "nginx" {

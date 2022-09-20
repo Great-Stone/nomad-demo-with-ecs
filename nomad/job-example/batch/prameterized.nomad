@@ -10,7 +10,7 @@ job "param" {
 
   constraint {
     attribute = "${attr.unique.hostname}"
-    value     = "cn-client-1"
+    value     = "ip-10-0-0-204"
   }
 
   group "batch" {
