@@ -32,7 +32,7 @@ terraform apply -auto-approve
 mkdir -p ./.ssh
 terraform output ssh_private_key > ./.ssh/id_rsa
 sed -i "" '/EOT/d' ./.ssh/id_rsa
-chmod 600 ./.ssh/id_rsaex
+chmod 600 ./.ssh/id_rsa
 
 # Debug Client
 ssh -i ./.ssh/id_rsa ubuntu@$(terraform output -json nomad_client_ips | jq -r '.[0]')
