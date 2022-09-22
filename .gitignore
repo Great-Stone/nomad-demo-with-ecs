@@ -6,3 +6,6 @@ terraform.tfstate*
 
 # ignore redered Nomad Job
 nomad/job-example/ecs/demo-ecs-demo*
+
+# ignore license
+terraform/amore-nomad-cluster/files/nomad.hclic

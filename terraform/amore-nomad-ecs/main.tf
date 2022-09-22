@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "great-stone-biz"
+    organization = "my-mega"
     hostname = "app.terraform.io"
 
     workspaces {
@@ -31,7 +31,7 @@ data "terraform_remote_state" "net" {
   backend = "remote"
 
   config = {
-    organization = "great-stone-biz"
+    organization = "my-mega"
     workspaces = {
       name = "amore-nomad-cluster"
     }
@@ -71,8 +71,19 @@ data "template_file" "nomad_ecs_job" {
   }
 }
 
+#auto job deploy
 resource "nomad_job" "nomad_ecs_job" {
   jobspec = <<EOT
 ${data.template_file.nomad_ecs_job.rendered}
   EOT
+}
+
+#prometheus job deploy
+resource "nomad_job" "nomad_prom_job" {
+  jobspec = file("./job_file/prometheus.tpl")
+}
+
+#autoscaler job deploy
+resource "nomad_job" "nomad_das_job" {
+  jobspec = file("./job_file/autoscaler.tpl")
 }

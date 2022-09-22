@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "great-stone-biz"
+    organization = "my-mega"
     hostname     = "app.terraform.io"
 
     workspaces {
@@ -22,6 +22,7 @@ provider "aws" {
     tags = var.default_tags
   }
 }
+
 
 resource "aws_vpc" "nomad_demo" {
   cidr_block = var.vpc_cidr_block
@@ -82,6 +83,14 @@ resource "aws_security_group" "nomad_server" {
   vpc_id = aws_vpc.nomad_demo.id
 
   ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
+  }
+
+  ingress {
     from_port   = 4646
     to_port     = 4646
     protocol    = "tcp"
@@ -125,12 +134,29 @@ resource "aws_security_group" "nomad_client" {
   }
 
   ingress {
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
+  }
+
+  ingress {
     from_port   = 28080
     to_port     = 28080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
+
+  ingress {
+    from_port   = 20000
+    to_port     = 32000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
+  }
+
   
   egress {
     from_port   = 0
@@ -154,6 +180,9 @@ resource "aws_key_pair" "example" {
 
 data "template_file" "server" {
   template = file("./template/install_server.tpl")
+  vars = {
+    license         = file("./files/nomad.hclic")
+  }
 }
 
 resource "aws_eip" "server" {

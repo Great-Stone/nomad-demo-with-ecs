@@ -25,3 +25,8 @@ variable "client_count" {
 variable "ecs_cluster_name" {
   default = "nomad-ecs-remote-demo"
 }
+
+# variable "license_file" {
+#   type        = string
+#   default     = file("./files/nomad.hclic")
+# }

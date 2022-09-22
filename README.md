@@ -31,7 +31,10 @@ terraform apply -auto-approve
 # Create SSH Private Key
 mkdir -p ./.ssh
 terraform output ssh_private_key > ./.ssh/id_rsa
+#If MAC OS 
 sed -i "" '/EOT/d' ./.ssh/id_rsa
+#If Windows
+sed -i '/EOT/d' ./.ssh/id_rsa
 chmod 600 ./.ssh/id_rsa
 
 # Debug Client

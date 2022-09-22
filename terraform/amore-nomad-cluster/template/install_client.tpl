@@ -1,7 +1,7 @@
 #!/bin/bash
 curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 sudo apt-add-repository 'deb [arch=amd64] https://apt.releases.hashicorp.com bionic main'
-sudo apt-get update && sudo apt-get -y install nomad
+sudo apt-get update && sudo apt-get -y install nomad-enterprise
 
 sudo apt-get install -y \
     apt-transport-https \
@@ -66,6 +66,12 @@ plugin "nomad-driver-ecs" {
     cluster = "${clustername}"
     region  = "${region}"
   }
+}
+
+telemetry {
+  publish_allocation_metrics = true
+  publish_node_metrics       = true
+  prometheus_metrics         = true
 }
 
 EOCONFIG
