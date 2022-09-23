@@ -3,7 +3,7 @@
 ## Tested Env
 
 > Terraform > 0.12.0
-> Nomad >= 1.1.0
+> Nomad-enterprise >= 1.1.0
 > aws-iam-authenticator >= 0.5.0
 > docker
 > java
@@ -23,6 +23,7 @@
 - Terraform Cloud Backend
 - If you want, change `terrform > cloud > workspace > name`
 - Set up Terraform Cloud Worksapce `Remote state sharing` to share ECS Workspace (all or selected)
+- You need the nomad license file in amore-nomad-cluster/files. The file name is nomad.hclic
 
 ```bash
 cd ./terraform/amore-nomad-cluster
@@ -46,6 +47,8 @@ ssh -i ./.ssh/id_rsa ubuntu@$(terraform output -json nomad_client_ips | jq -r '.
 - [ECS Cluster](./terraform/amore-nomad-ecs)
 - Terraform Cloud Backend
 - If you want, change `terrform > cloud > workspace > name`
+- In addition, das sample and load-test jobs are deployed.
+- Starting a load-test job is easy. You just need to deploy the dispatch job (there is a default parameter).
 
 ```bash
 cd ./terraform/amore-nomad-ecs
@@ -53,7 +56,6 @@ terraform apply -auto-approve
 
 terraform output sample_job
 ```
-
 
 ## Tear Down
 
