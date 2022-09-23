@@ -87,3 +87,13 @@ resource "nomad_job" "nomad_prom_job" {
 resource "nomad_job" "nomad_das_job" {
   jobspec = file("./job_file/autoscaler.tpl")
 }
+
+#das sample job deploy
+resource "nomad_job" "nomad_sample_job" {
+  jobspec = file("./job_file/example.tpl")
+}
+
+#sample load test job deploy
+resource "nomad_job" "nomad_load_test_job" {
+  jobspec = file("./job_file/load-test.tpl")
+}
