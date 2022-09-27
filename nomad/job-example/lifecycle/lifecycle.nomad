@@ -17,6 +17,7 @@ job "lifecycle" {
     service {
       name = "nginx-frontend"
       port = "http"
+      provider = "nomad"
     }
 
     task "create_page" {

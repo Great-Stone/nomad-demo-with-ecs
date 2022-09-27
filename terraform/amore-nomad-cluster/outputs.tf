@@ -2,6 +2,10 @@ output "demo_subnet_id" {
   value = aws_subnet.nomad_demo.id
 }
 
+output "demo_vpc_id" {
+  value = aws_vpc.nomad_demo.id
+}
+
 output "demo_security_group_id" {
   value = aws_security_group.nomad_ecs.id
 }
@@ -24,6 +28,10 @@ output "nomad_client_ips" {
 
 output "ecs_cluster_name" {
   value = var.ecs_cluster_name
+}
+
+output "nomad_efs_name" {
+  value = aws_efs_file_system.nomad_csi
 }
 
 output "ssh_private_key" {

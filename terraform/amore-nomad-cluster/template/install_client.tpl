@@ -60,6 +60,12 @@ client {
   }
 }
 
+plugin "docker" {
+  config {
+    allow_privileged = true
+  }
+}
+
 plugin "nomad-driver-ecs" {
   config {
     enabled = true

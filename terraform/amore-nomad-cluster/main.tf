@@ -326,3 +326,12 @@ data "aws_iam_policy_document" "cluster_discovery" {
     resources = ["*"]
   }
 }
+
+# csi efs volume
+resource "aws_efs_file_system" "nomad_csi" {
+  creation_token = "nomad-csi"
+
+  tags = {
+    Name = "nomad"
+  }
+}

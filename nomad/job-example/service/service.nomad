@@ -26,6 +26,7 @@ job "service" {
       name = "nginx-backend"
       port = "http"
       tags = ["prod"]
+      provider = "nomad"
     }
 
     task "nginx" {
@@ -49,6 +50,13 @@ job "service" {
         cpu_model:     {{ env "attr.cpu.modelname" }}<br>
         EOF
         destination = "local/html/index.html"
+      }
+      csi_plugin {
+        id             = "ebs_volume"
+        type           = "node"
+        mount_dir      = "/csi"  # this path /csi matches the --endpoint
+                            # argument for the container
+        health_timeout = "30s"
       }
     }
   }
