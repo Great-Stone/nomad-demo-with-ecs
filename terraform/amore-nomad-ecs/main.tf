@@ -80,7 +80,7 @@ resource "nomad_job" "nomad_csi_node_job" {
   jobspec = file("./job_file/csi-node.tpl")
 }
 
-#ebs volumes 
+#ebs volumes (just second deploy)
 # data "nomad_plugin" "efs" {
 #   plugin_id        = "aws-efs0"
 #   wait_for_registration = true
