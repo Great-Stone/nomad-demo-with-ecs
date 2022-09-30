@@ -26,6 +26,10 @@ variable "ecs_cluster_name" {
   default = "nomad-ecs-remote-demo"
 }
 
+variable "availability_zones" {
+  default = "ap-northeast-2a"
+}
+
 # variable "license_file" {
 #   type        = string
 #   default     = file("./files/nomad.hclic")

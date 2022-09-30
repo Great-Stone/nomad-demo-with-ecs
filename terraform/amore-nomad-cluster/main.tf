@@ -26,11 +26,17 @@ provider "aws" {
 
 resource "aws_vpc" "nomad_demo" {
   cidr_block = var.vpc_cidr_block
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    env = "nomad"
+  }
 }
 
 resource "aws_subnet" "nomad_demo" {
   cidr_block = var.vpc_cidr_block
   vpc_id     = aws_vpc.nomad_demo.id
+  availability_zone = "ap-northeast-2a"
 }
 
 resource "aws_internet_gateway" "nomad_demo" {
@@ -136,6 +142,14 @@ resource "aws_security_group" "nomad_client" {
   ingress {
     from_port   = 9090
     to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
+  }
+
+  ingress {
+    from_port   = 2049
+    to_port     = 2049
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
@@ -321,7 +335,35 @@ data "aws_iam_policy_document" "cluster_discovery" {
       "ecs:UpdateContainerAgent",
       "ecs:StartTask",
       "ecs:StopTask",
-      "ecs:RunTask"
+      "ecs:RunTask",
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:ClientWrite",
+      "elasticfilesystem:ClientRootAccess"
+    ]
+    resources = ["*"]
+  }
+}
+#efs test add iam
+# "elasticfilesystem:ClientMount",
+# "elasticfilesystem:ClientWrite",
+# "elasticfilesystem:ClientRootAccess"
+
+resource "aws_iam_role_policy" "mount_efs_volumes" {
+  name   = "mount-efs-volumes"
+  role   = aws_iam_role.instance_role.id
+  policy = data.aws_iam_policy_document.mount_efs_volumes.json
+}
+
+data "aws_iam_policy_document" "mount_efs_volumes" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeTags",
+      "ec2:DescribeVolumes",
+      "ec2:AttachVolume",
+      "ec2:DetachVolume",
     ]
     resources = ["*"]
   }
@@ -330,8 +372,42 @@ data "aws_iam_policy_document" "cluster_discovery" {
 # csi efs volume
 resource "aws_efs_file_system" "nomad_csi" {
   creation_token = "nomad-csi"
+  performance_mode = "generalPurpose"
+  throughput_mode  = "bursting"
 
   tags = {
-    Name = "nomad"
+    Name = "nomad-csi"
+  }
+  availability_zone_name = "ap-northeast-2a"
+}
+
+resource "aws_efs_mount_target" "nomad_efs" {
+  file_system_id = aws_efs_file_system.nomad_csi.id
+  subnet_id      = aws_subnet.nomad_demo.id
+  security_groups = [ aws_security_group.efs.id ] 
+}
+
+resource "aws_security_group" "efs" {
+  name        = "allow_efs"
+  description = "Allow EFS inbound traffic"
+  vpc_id      = aws_vpc.nomad_demo.id
+
+  ingress {
+    description = "TLS from VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
   }
 }
