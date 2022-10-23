@@ -23,28 +23,24 @@ provider "aws" {
   }
 }
 
+################################
+## nomad-cluster network 설정 ##
+################################
 
-resource "aws_vpc" "nomad_demo" {
-  cidr_block = var.vpc_cidr_block
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-  tags = {
-    env = "nomad"
-  }
+data "aws_vpc" "nomad_demo"{
+  id = var.my_vpc
 }
 
-resource "aws_subnet" "nomad_demo" {
-  cidr_block = var.vpc_cidr_block
-  vpc_id     = aws_vpc.nomad_demo.id
-  availability_zone = "ap-northeast-2a"
+data "aws_subnet" "nomad_demo" {
+  id = var.my_subnet
 }
 
 resource "aws_internet_gateway" "nomad_demo" {
-  vpc_id = aws_vpc.nomad_demo.id
+  vpc_id = data.aws_vpc.nomad_demo.id
 }
 
 resource "aws_route_table" "nomad_demo" {
-  vpc_id = aws_vpc.nomad_demo.id
+  vpc_id = data.aws_vpc.nomad_demo.id
 }
 
 resource "aws_route" "nomad_demo" {
@@ -54,27 +50,18 @@ resource "aws_route" "nomad_demo" {
 }
 
 resource "aws_route_table_association" "nomad_demo" {
-  subnet_id      = aws_subnet.nomad_demo.id
+  subnet_id      = data.aws_subnet.nomad_demo.id
   route_table_id = aws_route_table.nomad_demo.id
 }
 
-// data "http" "myip" {
-//   url = "https://api.myip.com"
-
-//   request_headers = {
-//     Accept = "application/json"
-//   }
-// }
-
 resource "aws_security_group" "nomad_ecs" {
-  vpc_id = aws_vpc.nomad_demo.id
+  vpc_id = data.aws_vpc.nomad_demo.id
 
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   egress {
@@ -86,30 +73,41 @@ resource "aws_security_group" "nomad_ecs" {
 }
 
 resource "aws_security_group" "nomad_server" {
-  vpc_id = aws_vpc.nomad_demo.id
+  vpc_id = data.aws_vpc.nomad_demo.id
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   ingress {
     from_port   = 4646
-    to_port     = 4646
+    to_port     = 4648
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   ingress {
+    from_port   = 4646
+    to_port     = 4648
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
     from_port   = 4647
-    to_port     = 4647
+    to_port     = 4648
     protocol    = "tcp"
-    cidr_blocks = [aws_vpc.nomad_demo.cidr_block]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 4647
+    to_port     = 4648
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -121,14 +119,13 @@ resource "aws_security_group" "nomad_server" {
 }
 
 resource "aws_security_group" "nomad_client" {
-  vpc_id = aws_vpc.nomad_demo.id
+  vpc_id = data.aws_vpc.nomad_demo.id
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   ingress {
@@ -136,7 +133,6 @@ resource "aws_security_group" "nomad_client" {
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   ingress {
@@ -144,15 +140,6 @@ resource "aws_security_group" "nomad_client" {
     to_port     = 9090
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
-  }
-
-  ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   ingress {
@@ -160,7 +147,6 @@ resource "aws_security_group" "nomad_client" {
     to_port     = 28080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
   ingress {
@@ -168,10 +154,9 @@ resource "aws_security_group" "nomad_client" {
     to_port     = 32000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    // cidr_blocks = ["${jsondecode(data.http.myip.response_body).ip}/32"]
   }
 
-  
+
   egress {
     from_port   = 0
     to_port     = 65535
@@ -180,53 +165,47 @@ resource "aws_security_group" "nomad_client" {
   }
 }
 
-#################
-
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "aws_key_pair" "example" {
-  key_name   = "${var.prefix}-key-pair"
-  public_key = tls_private_key.example.public_key_openssh
-}
-
+##############################
+##       nomad server       ##
+##############################
 data "template_file" "server" {
   template = file("./template/install_server.tpl")
   vars = {
-    license         = file("./files/nomad.hclic")
+    license = file("./files/nomad.hclic")
+    tag_value   = "${var.prefix}-nomad-server"
+    region      = var.region
   }
 }
 
 resource "aws_eip" "server" {
   vpc      = true
-  instance = aws_instance.server.id
+  instance = aws_instance.server[0].id
 }
 
 data "aws_ami" "example" {
   most_recent = true
-  owners      = ["099720109477"]
   filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+    name   = "owner-alias"
+    values = ["amazon"]
   }
 
   filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
+    name   = "name"
+    values = ["amzn2-ami-hvm*"]
   }
 }
 
 resource "aws_instance" "server" {
-  subnet_id     = aws_subnet.nomad_demo.id
+  count         = var.server_count
+  subnet_id     = data.aws_subnet.nomad_demo.id
   ami           = data.aws_ami.example.image_id
   instance_type = "m5.large"
-  key_name      = aws_key_pair.example.key_name
+  key_name      = var.my_ssh
   vpc_security_group_ids = [
     aws_security_group.nomad_server.id
   ]
   user_data = data.template_file.server.rendered
+  iam_instance_profile = aws_iam_instance_profile.test_profile.name
 
   tags = {
     type = "${var.prefix}-nomad-server"
@@ -239,20 +218,15 @@ resource "aws_instance" "server" {
   }
 }
 
-// data "external" "env" {
-//   program = ["${path.module}/env.sh"]
-// }
-
+##############################
+##       nomad client       ##
+##############################
 data "template_file" "client" {
   template = file("./template/install_client.tpl")
 
   vars = {
-    tag_value = "${var.prefix}-nomad-server"
-    region = var.region
-    clustername = var.ecs_cluster_name
-    // aws_access_key_id = external.env.result["id"]
-    // aws_secret_access_key = external.env.result["secret"]
-    // aws_session_token = external.env.result["token"]
+    tag_value   = "${var.prefix}-nomad-server"
+    region      = var.region
   }
 }
 
@@ -264,10 +238,10 @@ resource "aws_eip" "client" {
 
 resource "aws_instance" "client" {
   count         = var.client_count
-  subnet_id     = aws_subnet.nomad_demo.id
+  subnet_id     = data.aws_subnet.nomad_demo.id
   ami           = data.aws_ami.example.image_id
-  instance_type = "m5.xlarge"
-  key_name      = aws_key_pair.example.key_name
+  instance_type = "m5.large"
+  key_name      = var.my_ssh
   vpc_security_group_ids = [
     aws_security_group.nomad_client.id
   ]
@@ -281,9 +255,9 @@ resource "aws_instance" "client" {
   }
 }
 
-############
-# Policy
-
+##############################
+##     auto-join policy     ##
+##############################
 data "aws_iam_policy_document" "instance_role" {
   statement {
     effect = "Allow"
@@ -335,79 +309,8 @@ data "aws_iam_policy_document" "cluster_discovery" {
       "ecs:UpdateContainerAgent",
       "ecs:StartTask",
       "ecs:StopTask",
-      "ecs:RunTask",
-      "elasticfilesystem:ClientMount",
-      "elasticfilesystem:ClientWrite",
-      "elasticfilesystem:ClientRootAccess"
+      "ecs:RunTask"
     ]
     resources = ["*"]
-  }
-}
-#efs test add iam
-# "elasticfilesystem:ClientMount",
-# "elasticfilesystem:ClientWrite",
-# "elasticfilesystem:ClientRootAccess"
-
-resource "aws_iam_role_policy" "mount_efs_volumes" {
-  name   = "mount-efs-volumes"
-  role   = aws_iam_role.instance_role.id
-  policy = data.aws_iam_policy_document.mount_efs_volumes.json
-}
-
-data "aws_iam_policy_document" "mount_efs_volumes" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "ec2:DescribeInstances",
-      "ec2:DescribeTags",
-      "ec2:DescribeVolumes",
-      "ec2:AttachVolume",
-      "ec2:DetachVolume",
-    ]
-    resources = ["*"]
-  }
-}
-
-# csi efs volume
-resource "aws_efs_file_system" "nomad_csi" {
-  creation_token = "nomad-csi"
-  performance_mode = "generalPurpose"
-  throughput_mode  = "bursting"
-
-  tags = {
-    Name = "nomad-csi"
-  }
-  availability_zone_name = "ap-northeast-2a"
-}
-
-resource "aws_efs_mount_target" "nomad_efs" {
-  file_system_id = aws_efs_file_system.nomad_csi.id
-  subnet_id      = aws_subnet.nomad_demo.id
-  security_groups = [ aws_security_group.efs.id ] 
-}
-
-resource "aws_security_group" "efs" {
-  name        = "allow_efs"
-  description = "Allow EFS inbound traffic"
-  vpc_id      = aws_vpc.nomad_demo.id
-
-  ingress {
-    description = "TLS from VPC"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = [ "0.0.0.0/0" ]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "allow_tls"
   }
 }

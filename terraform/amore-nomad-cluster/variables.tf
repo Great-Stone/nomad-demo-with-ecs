@@ -9,7 +9,7 @@ variable "prefix" {
 variable "vpc_cidr_block" {
   description = "The CIDR block range to use when creating the VPC."
   type        = string
-  default     = "10.0.0.0/24"
+  default     = "10.0.10.0/24"
 }
 
 variable "region" {
@@ -22,15 +22,24 @@ variable "client_count" {
   default = 2
 }
 
-variable "ecs_cluster_name" {
-  default = "nomad-ecs-remote-demo"
+variable "server_count" {
+  default = 3
+}
+
+# already env setting
+variable "my_ssh" {
+  default = "my_ssh_key"
+}
+
+variable "my_vpc"{
+  default = "vpc_id"
+}
+
+variable "my_subnet"{
+  default = "subnet_id"
 }
 
 variable "availability_zones" {
   default = "ap-northeast-2a"
 }
 
-# variable "license_file" {
-#   type        = string
-#   default     = file("./files/nomad.hclic")
-# }

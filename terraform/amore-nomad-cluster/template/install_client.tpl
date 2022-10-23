@@ -1,10 +1,10 @@
 #!/bin/bash
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-sudo apt-add-repository 'deb [arch=amd64] https://apt.releases.hashicorp.com bionic main'
-sudo apt-get update && sudo apt-get -y install nomad-enterprise
+sudo yum update -y
+sudo yum install yum-utils -y
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+sudo yum install nomad-enterprise -y
 
-sudo apt-get install -y \
-    apt-transport-https \
+sudo yum install -y \
     ca-certificates \
     curl \
     gnupg \
@@ -12,26 +12,16 @@ sudo apt-get install -y \
     unzip \
     lsb-release
 
-sudo apt-get update
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+sudo yum update -y
+sudo amazon-linux-extras install docker -y
+sleep 1
+sudo systemctl enable docker
+sleep 1
+sudo systemctl start docker
+sudo yum install java-11-amazon-corretto-headless -y
 
-sudo apt-get update
-sudo apt-get install -y docker-ce openjdk-11-jdk
-
-for SOLUTION in "nomad";
-do
-    sudo mkdir -p /var/lib/$SOLUTION/{data,plugins}
-    sudo chown -R $SOLUTION:$SOLUTION /var/lib/$SOLUTION
-done
-
-# mkdir -p ~/.aws
-# cat <<EOT >> ~/.aws/credentials
-# [default]
-# aws_access_key_id = $${aws_access_key_id}
-# aws_secret_access_key = $${aws_secret_access_key}
-# aws_session_token = $${aws_session_token}
-# EOT
+sudo mkdir -p /var/lib/$SOLUTION/{data,plugins}
+sudo chown -R $SOLUTION:$SOLUTION /var/lib/$SOLUTION
 
 wget https://releases.hashicorp.com/nomad-driver-ecs/0.1.0/nomad-driver-ecs_0.1.0_linux_amd64.zip
 unzip ./nomad-driver-ecs_0.1.0_linux_amd64.zip
@@ -42,11 +32,11 @@ sudo cat <<EOCONFIG > /etc/nomad.d/nomad.hcl
 log_level  = "DEBUG"
 data_dir = "/var/lib/nomad/data"
 plugin_dir = "/var/lib/nomad/plugins"
-bind_addr = "{{ GetInterfaceIP \"ens5\" }}"
+bind_addr = "{{ GetInterfaceIP \"eth0\" }}"
 advertise {
-  http = "{{ GetInterfaceIP \"ens5\" }}"
-  rpc  = "{{ GetInterfaceIP \"ens5\" }}"
-  serf = "{{ GetInterfaceIP \"ens5\" }}"
+  http = "{{ GetInterfaceIP \"eth0\" }}"
+  rpc  = "{{ GetInterfaceIP \"eth0\" }}"
+  serf = "{{ GetInterfaceIP \"eth0\" }}"
 }
 
 client {
@@ -54,7 +44,7 @@ client {
   server_join {
     retry_join = ["provider=aws region=${region} addr_type=private_v4 tag_key=type tag_value=${tag_value}"]
   }
-  network_interface = "ens5"
+  network_interface = "eth0"
   options = {
    "driver.raw_exec.enable" = "1"
   }
@@ -63,14 +53,6 @@ client {
 plugin "docker" {
   config {
     allow_privileged = true
-  }
-}
-
-plugin "nomad-driver-ecs" {
-  config {
-    enabled = true
-    cluster = "${clustername}"
-    region  = "${region}"
   }
 }
 
