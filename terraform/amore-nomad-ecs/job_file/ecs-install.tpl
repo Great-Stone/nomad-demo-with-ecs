@@ -19,6 +19,7 @@ plugin "nomad-driver-ecs" {
 }
 EOCONFIG
 sudo systemctl restart nomad
+sudo systemctl status nomad
 EOF
         destination = "ecs_install.sh"
       }

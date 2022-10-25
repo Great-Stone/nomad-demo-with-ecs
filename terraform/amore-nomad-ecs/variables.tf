@@ -23,10 +23,22 @@ variable "nomad_server_dns" {
   default     = "nomad_server_dns"
 }
 
+variable "my_vpc"{
+  default = "vpc_id"
+}
+
 variable "my_sgi" {
   default = "my_sgi"
 }
 
 variable "my_subnet" {
   default = "my_subnet"
+}
+
+variable "app_name" {
+  default = "my_app"
+}
+
+variable "app_environment" {
+  default = "my_env"
 }

@@ -1,13 +1,13 @@
-job "nomad-ecs-demo" {
+ob "nomad-ecs-demo" {
   datacenters = ["dc1"]
-  namespace = "${namespace}"
+  namespace = "ecs"
 
   group "ecs-remote-task-demo" {
     count = 1
 
     scaling {
       enabled = true
-      min = 2
+      min = 0
       max = 5
     }
 
@@ -26,13 +26,13 @@ job "nomad-ecs-demo" {
 
       config {
         task {
-          launch_type     = "EC2"
-          task_definition = "${task_definition}"
+          launch_type     = "FARGATE"
+          task_definition = "nomad-ecs-remote-demo:15"
           network_configuration {
             aws_vpc_configuration {
-              #assign_public_ip = "ENABLED"
-              security_groups  = ["${security_group_id}"]
-              subnets          = ["${subnet_id1}","${subnet_id2}"]
+              assign_public_ip = "ENABLED"
+              security_groups  = ["sg-0da05378bfcb72945"]
+              subnets          = ["subnet-08303312087506cc7"]
             }
           }
         }

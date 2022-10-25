@@ -36,8 +36,14 @@ variable "my_vpc"{
 }
 
 variable "my_subnet"{
-  default = "subnet_id"
+  type    = map(any)
+  default = {
+    client1 = {
+      my_subnet = "subnet1"
+    }
+  }
 }
+
 
 variable "availability_zones" {
   default = "ap-northeast-2a"

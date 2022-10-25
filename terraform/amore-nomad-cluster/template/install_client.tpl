@@ -10,7 +10,7 @@ sudo yum install -y \
     gnupg \
     wget \
     unzip \
-    lsb-release
+    lsb-release6-
 
 sudo yum update -y
 sudo amazon-linux-extras install docker -y
@@ -20,8 +20,13 @@ sleep 1
 sudo systemctl start docker
 sudo yum install java-11-amazon-corretto-headless -y
 
-sudo mkdir -p /var/lib/$SOLUTION/{data,plugins}
-sudo chown -R $SOLUTION:$SOLUTION /var/lib/$SOLUTION
+
+
+for SOLUTION in "nomad";
+do
+    sudo mkdir -p /var/lib/$SOLUTION/{data,plugins}
+    sudo chown -R $SOLUTION:$SOLUTION /var/lib/$SOLUTION
+done
 
 wget https://releases.hashicorp.com/nomad-driver-ecs/0.1.0/nomad-driver-ecs_0.1.0_linux_amd64.zip
 unzip ./nomad-driver-ecs_0.1.0_linux_amd64.zip
